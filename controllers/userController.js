@@ -1,9 +1,49 @@
 const User = require('./../models/userModel');
+const catchAsync = require('./../utils/catchAsync');
+const AppError = require('./../utils/appError');
 
-exports.getAllUsers = async () => {};
+const filterRequestObject = (obj, ...allowedfields) => {
+  const newObject = {};
 
-exports.resetPassword = async () => {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedfields.includes(el)) {
+      newObject[el] = obj[el];
+    }
+  });
+  return newObject;
+};
 
-exports.forgotPassword = async () => {};
+exports.getAllUsers = async () => {
+  const allUsers = await User.find();
 
-exports.updateUserDetails = async () => {};
+  if (!allUsers) {
+    return next(new AppError('Users not found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      allUsers,
+    },
+  });
+};
+
+exports.updateUserDetails = catchAsync(async (req, res, next) => {
+  const { id } = req.user;
+  const userDetails = filterRequestObject(req.body, 'photo', 'name');
+
+  console.log(userDetails);
+
+  // update user details except the password and other sensitive details
+  const user = await User.findByIdAndUpdate(id, userDetails, {
+    runValidators: true,
+    returnDocument: 'after',
+  });
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      user,
+    },
+  });
+});

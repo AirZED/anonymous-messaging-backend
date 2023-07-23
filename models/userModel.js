@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema(
   {
@@ -19,6 +20,7 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     photo: String,
+    role: { type: 'String', enum: ['admin', 'user'], default: 'user' },
     passwordConfirm: {
       type: String,
       validate: {
@@ -29,6 +31,8 @@ const userSchema = new mongoose.Schema(
       },
     },
     passwordResetAt: Date,
+    passwordResetToken: String,
+    passwordResetTokenExpireTime: Date,
   },
   {
     timestamps: true,
@@ -37,6 +41,7 @@ const userSchema = new mongoose.Schema(
   },
 );
 
+// DOCUMENT MIDDLEWARE
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
@@ -48,16 +53,41 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// QUERY MIDDLEWARE
+userSchema.pre(/^find/, function (next) {
+  if (this.passwordResetToken && passwordResetTokenExpireTime < Date.now()) {
+    this.select(' -passwordResetTokenExpireTime -passwordResetToken');
+  }
+
+  this.select('-__v');
+  next();
+});
+
+// METHODS
 userSchema.methods.comparePassword = async function (password, passwordHash) {
   return await bcrypt.compare(password, passwordHash);
 };
 
-userSchema.methods.compareLastChangePasswordTime = async function (
-  tokenExpireTime,
-  passwordlastChange,
-) {
-  console.log('Token expire Time :' + tokenExpireTime);
-  console.log('Password Last Change :' + passwordlastChange);
+userSchema.methods.compareLastChangePasswordTime = function (expireTime) {
+  const passwordLastReset = this.passwordResetAt.getTime() / 1000;
+  return expireTime < passwordLastReset;
+};
+
+userSchema.methods.compareResetTokenTime = function () {
+  return Date.now() < this.passwordResetTokenExpireTime;
+};
+
+userSchema.methods.generatePasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  // hash to token that is sent to the database
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // creating a token expire time 5 mins after it was created
+  this.passwordResetTokenExpireTime = Date.now() + 5 * 60 * 1000;
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);
