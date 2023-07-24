@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { v4: uuid } = require('uuid');
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,6 +14,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, 'Please enter a valid email'],
     },
+    uniqueId: String,
     password: {
       type: String,
       minlength: 8,
@@ -53,12 +55,18 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// DOCUMENT MIDDLEWARE
+userSchema.pre('save', function (next) {
+  if (!this.isNew) return next();
+  this.uniqueId = uuid();
+  next();
+});
+
 // QUERY MIDDLEWARE
 userSchema.pre(/^find/, function (next) {
   if (this.passwordResetToken && passwordResetTokenExpireTime < Date.now()) {
     this.select(' -passwordResetTokenExpireTime -passwordResetToken');
   }
-
   this.select('-__v');
   next();
 });

@@ -3,7 +3,17 @@ const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
-  res.send('message has been sent!!!');
+  const { recieverId: recipient } = req.params;
+
+  const uniqueId = uuidv4();
+
+  console.log(uniqueId);
+
+  // const message = await User.create({ ...req.body, recipient });
+
+  res.status(201).json({
+    stutus: 'success',
+  });
 });
 
 exports.deleteMessage = catchAsync(async (req, res, next) => {});
@@ -11,4 +21,3 @@ exports.deleteMessage = catchAsync(async (req, res, next) => {});
 exports.editMessage = catchAsync(async (req, res, next) => {});
 
 exports.reportMessage = catchAsync(async (req, res, next) => {});
-
