@@ -4,8 +4,19 @@ const router = express.Router();
 const authController = require('./../controllers/authController');
 const messageController = require('./../controllers/messageController');
 
-router.route('/').post(messageController.sendMessage);
+router.use(authController.protect);
+
 router
-  .route('/:recieverId')
-  .post(authController.protect, messageController.sendMessage);
+  .route('/')
+  .get(messageController.fetchSentMessages)
+  .post(messageController.sendMessage);
+
+router
+  .route('/:id')
+  .get(messageController.getMessagesFromSingleUser)
+  .post(messageController.sendMessage)
+  .delete(messageController.deleteMessage)
+  .patch(messageController.editMessage)
+  .put(messageController.reportMessage);
+
 module.exports = router;

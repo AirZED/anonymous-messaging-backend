@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
 const messageSchema = new mongoose.Schema(
@@ -7,15 +6,24 @@ const messageSchema = new mongoose.Schema(
     recipient: {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
-      required: true,
+      required: [true, 'Message must have a recipient'],
     },
     sender: {
       type: String,
-      required: true,
+      ref: 'User',
+      required: [true, 'Message must have a sender'],
     },
-    content: {
+    message: {
       type: String,
-      required: true,
+      required: [true, 'Message must have content'],
+    },
+    reported: {
+      status: { type: Boolean, default: false },
+      reportedBy: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+      reportReason: String,
     },
   },
   {
@@ -25,24 +33,24 @@ const messageSchema = new mongoose.Schema(
   },
 );
 
-// messageSchema
+// DOCUMENT MIDDLEWARE
+messageSchema.pre('save', function (next) {
+  if (!this.isNew) {
+    return next();
+  }
+  this.sender = crypto.createHash('sha256').update(this.sender).digest('hex');
+  next();
+});
 
-/*
+messageSchema.pre(/^find/, function (next) {
+  this.populate({ path: 'recipient', select: 'name photo' }).populate({
+    path: 'reported.reportedBy',
+    select: 'name',
+  });
+  next();
+});
 
-var crypto = require('crypto');
-var assert = require('assert');
-
-var algorithm = 'aes256'; // or any other algorithm supported by OpenSSL
-var key = 'password';
-var text = 'I love kittens';
-
-var cipher = crypto.createCipher(algorithm, key);  
-var encrypted = cipher.update(text, 'utf8', 'hex') + cipher.final('hex');
-var decipher = crypto.createDecipher(algorithm, key);
-var decrypted = decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
-
-assert.equal(decrypted, text);
-*/
+// MONGOOSE METHODS
 
 const Message = mongoose.model('Message', messageSchema);
 module.exports = Message;

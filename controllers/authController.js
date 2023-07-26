@@ -67,18 +67,19 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new AppError('jwt has expired', 404));
   }
   // check if user is was not deleted after token was assigned
-  const user = await User.findOne({ _id: decoded.id });
-  if (!user) {
+  const confirmedUser = await User.findOne({ _id: decoded.id });
+  if (!confirmedUser) {
     return next(
       new AppError('This user does not exist, please create account', 404),
     );
   }
   // check if user did not change password was just after token was assigned
-  const isChange = user.compareLastChangePasswordTime(decoded.iat);
+  const isChange = confirmedUser.compareLastChangePasswordTime(decoded.iat);
   if (isChange) {
     return next(new AppError('User password was changed', 400));
   }
-  req.user = user;
+  req.user = confirmedUser;
+
   next();
 });
 

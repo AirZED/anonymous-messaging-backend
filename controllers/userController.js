@@ -32,13 +32,15 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
   const { id } = req.user;
   const userDetails = filterRequestObject(req.body, 'photo', 'name');
 
-  console.log(userDetails);
-
   // update user details except the password and other sensitive details
   const user = await User.findByIdAndUpdate(id, userDetails, {
     runValidators: true,
     returnDocument: 'after',
   });
+
+  if (!user) {
+    return next(new AppError('User not found'));
+  }
 
   res.status(201).json({
     status: 'success',
@@ -47,3 +49,5 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.deleteUser = catchAsync((req, res, next) => {});

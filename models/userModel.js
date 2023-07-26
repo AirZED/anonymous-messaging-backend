@@ -77,6 +77,9 @@ userSchema.methods.comparePassword = async function (password, passwordHash) {
 };
 
 userSchema.methods.compareLastChangePasswordTime = function (expireTime) {
+  if (!this.passwordResetAt) {
+    return false;
+  }
   const passwordLastReset = this.passwordResetAt.getTime() / 1000;
   return expireTime < passwordLastReset;
 };

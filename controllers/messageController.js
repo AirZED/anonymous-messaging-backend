@@ -1,23 +1,130 @@
-const Message = require('./../models/userModel');
+const Message = require('./../models/messageModel');
 const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
+const crypto = require('crypto');
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
-  const { recieverId: recipient } = req.params;
+  const { id: recipient } = req.params;
+  const { uniqueId: sender } = req.user;
 
-  const uniqueId = uuidv4();
+  const message = await Message.create({ ...req.body, recipient, sender });
 
-  console.log(uniqueId);
-
-  // const message = await User.create({ ...req.body, recipient });
-
+  if (!message) {
+    return next(new AppError('Message cannot be left blank'));
+  }
   res.status(201).json({
     stutus: 'success',
+    data: {
+      message,
+    },
   });
 });
 
-exports.deleteMessage = catchAsync(async (req, res, next) => {});
+// FETCH CONVERSATION WITH A SINGLE ANONYMOUS USER
+exports.getMessagesFromSingleUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const sender = crypto
+    .createHash('sha256')
+    .update(req.user.uniqueId)
+    .digest('hex');
 
-exports.editMessage = catchAsync(async (req, res, next) => {});
+  const messages = await Message.find({
+    $or: [{ sender: sender }, { recipient: id }],
+  });
 
-exports.reportMessage = catchAsync(async (req, res, next) => {});
+  if (!messages) {
+    return next(new AppError());
+  }
+  res.status(201).json({
+    stutus: 'success',
+    data: {
+      messages,
+    },
+  });
+});
+
+// FETCH ALL CONVERSATION AND ARRANGE THEM PER USER
+
+exports.fetchSentMessages = catchAsync(async (req, res, next) => {
+  const message = await Message.find();
+
+  if (!message) {
+    return next(new AppError('Messages not found'));
+  }
+  res.status(200).json({
+    stutus: 'success',
+    data: {
+      message,
+    },
+  });
+});
+
+exports.fetchSingleMessage = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const message = await Message.findOne({ _id: id });
+
+  if (!message) {
+    return next(new AppError('Message not found'));
+  }
+  res.status(200).json({
+    stutus: 'success',
+    data: {
+      message,
+    },
+  });
+});
+exports.deleteMessage = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const message = await Message.findByIdAndDelete(id);
+
+  if (!message) {
+    return next(new AppError('message does not exist'));
+  }
+
+  res.status(204).json({
+    stutus: 'success',
+    data: null,
+  });
+});
+
+exports.editMessage = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const message = await Message.findByIdAndUpdate(id, req.body.message, {
+    runValidators: true,
+    returnDocument: 'after',
+  });
+
+  if (!message) {
+    return next(new AppError('Message not found'));
+  }
+  res.status(204).json({
+    stutus: 'success',
+    data: {
+      message,
+    },
+  });
+});
+
+exports.reportMessage = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const reported = { status: true, reportedBy: req.user.id, ...req.body };
+
+  const message = await Message.findByIdAndUpdate(
+    id,
+    { reported },
+    { returnDocument: 'after' },
+  );
+
+  if (!message) {
+    return next(new AppError('Message not found'));
+  }
+  res.status(201).json({
+    stutus: 'success',
+    data: {
+      message,
+    },
+  });
+});
