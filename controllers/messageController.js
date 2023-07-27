@@ -20,20 +20,21 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
   });
 });
 
-// FETCH CONVERSATION WITH A SINGLE ANONYMOUS USER
-exports.getMessagesFromSingleUser = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+// FETCH MESSAGES SENT TO A SINGLE USER
+exports.getMessagesSentToSingleUser = catchAsync(async (req, res, next) => {
+  const { id: recipient } = req.params;
   const sender = crypto
     .createHash('sha256')
     .update(req.user.uniqueId)
     .digest('hex');
 
   const messages = await Message.find({
-    $or: [{ sender: sender }, { recipient: id }],
+    sender,
+    recipient,
   });
 
   if (!messages) {
-    return next(new AppError());
+    return next(new AppError('Messages not found', 404));
   }
   res.status(201).json({
     stutus: 'success',
@@ -43,8 +44,25 @@ exports.getMessagesFromSingleUser = catchAsync(async (req, res, next) => {
   });
 });
 
-// FETCH ALL CONVERSATION AND ARRANGE THEM PER USER
+// FETCH ALL MESSAGES FROM A SINGLE USER
+exports.getMessagesFromSingleUser = catchAsync(async (req, res, next) => {
+  const { id: anonymousId } = req.params;
+  const { id } = req.user;
 
+  const messages = await Message.find({ sender: anonymousId, recipient: id });
+
+  if (!messages) {
+    return next(new AppError('Messages not found', 404));
+  }
+  res.status(201).json({
+    stutus: 'success',
+    data: {
+      messages,
+    },
+  });
+});
+
+// FETCH ALL SENT MESSAGES AND ARRANGE THEM PER USER
 exports.fetchSentMessages = catchAsync(async (req, res, next) => {
   const message = await Message.find();
 
@@ -88,13 +106,22 @@ exports.deleteMessage = catchAsync(async (req, res, next) => {
   });
 });
 
+// YOU CAN ONLY EDIT MESSAGES YOU SENT
 exports.editMessage = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const sender = crypto
+    .createHash('sha256')
+    .update(req.user.uniqueId)
+    .digest('hex');
 
-  const message = await Message.findByIdAndUpdate(id, req.body.message, {
-    runValidators: true,
-    returnDocument: 'after',
-  });
+  const message = await Message.findOneAndUpdate(
+    { id, sender },
+    req.body.message,
+    {
+      runValidators: true,
+      returnDocument: 'after',
+    },
+  );
 
   if (!message) {
     return next(new AppError('Message not found'));
@@ -107,8 +134,9 @@ exports.editMessage = catchAsync(async (req, res, next) => {
   });
 });
 
+//REPORTING AND HANDLING REPORTED MESSAGES
 exports.reportMessage = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
+  const { messageId: id } = req.params;
 
   const reported = { status: true, reportedBy: req.user.id, ...req.body };
 
@@ -128,3 +156,17 @@ exports.reportMessage = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+
+
+exports.getReportedMessages = catchAsync(async (req, res, next) => {
+  console.log('Wetin I do you');
+
+  // const messages = await Message.find({});
+
+  // console.log(messages);
+
+  res.send('Eh don dooo');
+});
+
+exports.handleReportedMessage = catchAsync(async (req, res, next) => {});

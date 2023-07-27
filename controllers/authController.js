@@ -66,8 +66,10 @@ exports.protect = catchAsync(async (req, res, next) => {
   if (!decoded) {
     return next(new AppError('jwt has expired', 404));
   }
+
   // check if user is was not deleted after token was assigned
   const confirmedUser = await User.findOne({ _id: decoded.id });
+
   if (!confirmedUser) {
     return next(
       new AppError('This user does not exist, please create account', 404),
@@ -79,7 +81,6 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new AppError('User password was changed', 400));
   }
   req.user = confirmedUser;
-
   next();
 });
 
@@ -88,7 +89,6 @@ exports.restrictTo = (...roles) =>
   catchAsync(async (req, res, next) => {
     if (!roles.includes(req.user.role))
       return next(new AppError(`Only ${roles[0]} can perform this action`));
-
     next();
   });
 
