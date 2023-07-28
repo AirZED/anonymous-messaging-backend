@@ -12,6 +12,24 @@ router
   // GET ALL MESSAGES
   .get(messageController.fetchSentMessages);
 
+// ADMIN ACTIVITIES.....................................................
+
+router.post(
+  '/reportedMessages/:messageId',
+  authController.restrictTo('admin'),
+  // HANDLE REPORTED MESSAGES
+  messageController.handleReportedMessage,
+);
+
+router.get(
+  '/reportedMessages',
+  authController.restrictTo('admin'),
+  // GET REPORTED MESSAGES
+  messageController.getReportedMessages,
+);
+// .......................................................................
+
+// NORMAL USER ACTIVITIES.................................................
 router
   .route('/:id')
   // GET MESSAGES SENT TO SINGLE USER
@@ -25,16 +43,8 @@ router
 
 // GET MESSAGES SENT FROM A SINGLE ANONYMOUUS USER
 router.route('/anonymous/:id').get(messageController.getMessagesFromSingleUser);
-
 // REPORT MESSAGE
-router.route('/:messageId/report').patch(messageController.reportMessage);
-
-// RESTRICTED ROUTES TO ONLY ADMIN
-router.use(authController.restrictTo('admin'));
-
-router.get('/reportedMessages/p', messageController.getReportedMessages);
-router
-  .route('/reportedMessages/:messageId')
-  .post(messageController.handleReportedMessage);
+router.patch('/:messageId/report', messageController.reportMessage);
+// ..........................................................................
 
 module.exports = router;

@@ -2,6 +2,7 @@ const Message = require('./../models/messageModel');
 const AppError = require('./../utils/appError');
 const catchAsync = require('./../utils/catchAsync');
 const crypto = require('crypto');
+const BlackList = require('./../models/blackListModel');
 
 exports.sendMessage = catchAsync(async (req, res, next) => {
   const { id: recipient } = req.params;
@@ -37,6 +38,7 @@ exports.getMessagesSentToSingleUser = catchAsync(async (req, res, next) => {
     return next(new AppError('Messages not found', 404));
   }
   res.status(201).json({
+    length: messages.length,
     stutus: 'success',
     data: {
       messages,
@@ -55,6 +57,7 @@ exports.getMessagesFromSingleUser = catchAsync(async (req, res, next) => {
     return next(new AppError('Messages not found', 404));
   }
   res.status(201).json({
+    length: messages.length,
     stutus: 'success',
     data: {
       messages,
@@ -71,6 +74,7 @@ exports.fetchSentMessages = catchAsync(async (req, res, next) => {
   }
   res.status(200).json({
     stutus: 'success',
+    length: message.length,
     data: {
       message,
     },
@@ -157,16 +161,42 @@ exports.reportMessage = catchAsync(async (req, res, next) => {
   });
 });
 
-
-
 exports.getReportedMessages = catchAsync(async (req, res, next) => {
-  console.log('Wetin I do you');
+  const reportedMessages = await Message.find({ 'reported.status': true });
 
-  // const messages = await Message.find({});
+  if (!reportedMessages) {
+    return next(new AppError('No reported message', 404));
+  }
 
-  // console.log(messages);
-
-  res.send('Eh don dooo');
+  res.status(200).json({
+    length: reportedMessages.length,
+    status: 'success',
+    data: {
+      message: reportedMessages,
+    },
+  });
 });
 
-exports.handleReportedMessage = catchAsync(async (req, res, next) => {});
+exports.handleReportedMessage = catchAsync(async (req, res, next) => {
+  const { messageId } = req.params;
+
+  const message = await Message.findById(messageId);
+
+  if (!message || !message.reported.status) {
+    return next(
+      new AppError(
+        'This message was either deleted or was not reported cannot be blacklisted',
+        404,
+      ),
+    );
+  }
+
+  const blacklistedId = message.sender;
+
+  await BlackList.create({ reportedUser: blacklistedId });
+
+  res.status(201).json({
+    status: 'success',
+    message: `user with anonymous id ${blacklistedId} has been added to blacklist`,
+  });
+});
