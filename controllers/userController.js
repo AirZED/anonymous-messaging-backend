@@ -4,7 +4,6 @@ const AppError = require('./../utils/appError');
 
 const filterRequestObject = (obj, ...allowedfields) => {
   const newObject = {};
-
   Object.keys(obj).forEach((el) => {
     if (allowedfields.includes(el)) {
       newObject[el] = obj[el];
@@ -13,19 +12,22 @@ const filterRequestObject = (obj, ...allowedfields) => {
   return newObject;
 };
 
+const sendResponseFn = (statusCode, data, res) => {
+  res.status(statusCode).json({
+    status: 'success',
+    data: {
+      data,
+    },
+  });
+};
+
 exports.getAllUsers = async () => {
   const allUsers = await User.find();
 
   if (!allUsers) {
     return next(new AppError('Users not found', 404));
   }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      allUsers,
-    },
-  });
+  sendResponseFn(200, allUsers, res);
 };
 
 exports.updateUserDetails = catchAsync(async (req, res, next) => {
@@ -42,12 +44,15 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
     return next(new AppError('User not found'));
   }
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
+  sendResponseFn(201, user, res);
 });
 
-exports.deleteUser = catchAsync((req, res, next) => {});
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndDelete(id);
+  if (!user) {
+    return next(new AppError('User not found'));
+  }
+  sendResponseFn(204, null, res);
+});

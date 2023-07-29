@@ -4,6 +4,10 @@ const catchAsync = require('./../utils/catchAsync');
 const crypto = require('crypto');
 const BlackList = require('./../models/blackListModel');
 
+const hashToken = (id) => {
+  return crypto.createHash('sha256').update(id).digest('hex');
+};
+
 exports.sendMessage = catchAsync(async (req, res, next) => {
   const { id: recipient } = req.params;
   const { uniqueId: sender } = req.user;
@@ -24,10 +28,7 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
 // FETCH MESSAGES SENT TO A SINGLE USER
 exports.getMessagesSentToSingleUser = catchAsync(async (req, res, next) => {
   const { id: recipient } = req.params;
-  const sender = crypto
-    .createHash('sha256')
-    .update(req.user.uniqueId)
-    .digest('hex');
+  const sender = hashToken(req.user.uniqueId);
 
   const messages = await Message.find({
     sender,
@@ -113,10 +114,7 @@ exports.deleteMessage = catchAsync(async (req, res, next) => {
 // YOU CAN ONLY EDIT MESSAGES YOU SENT
 exports.editMessage = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const sender = crypto
-    .createHash('sha256')
-    .update(req.user.uniqueId)
-    .digest('hex');
+  const sender = hashToken(req.user.uniqueId);
 
   const message = await Message.findOneAndUpdate(
     { id, sender },
