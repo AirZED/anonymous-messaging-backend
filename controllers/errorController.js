@@ -4,6 +4,7 @@ const AppError = require('../utils/appError');
 
 // HANDLE PRODUCTION ERROR
 const sendProdError = (err, res) => {
+  console.log(err);
   if (err.isOperational) {
     res.status(err.statusCode).json({
       error: err,
@@ -20,7 +21,6 @@ const sendProdError = (err, res) => {
 
 // HANDLE DEVELOPMENT ERROR
 const sendDevError = (err, res) => {
-  console.log(err);
   res.status(err.statusCode).json({
     status: err.status,
     message: err.message,
