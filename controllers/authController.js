@@ -21,12 +21,37 @@ const sendResponseFn = (statusCode, token, data, res) => {
   });
 };
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true,
+  };
+
+  // sends a secure jwt token to the browser that would automatically be sent back to use upon request
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('jwt', token, cookieOptions);
+
+  // this makes the password undefined
+  this.password = undefined;
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user: user,
+    },
+  });
+};
+
 // SIGNUP CONTROLLER
 exports.signup = catchAsync(async (req, res, next) => {
   const user = await User.create(req.body);
 
-  const token = signToken(user._id);
-  sendResponseFn(201, token, user, res);
+  createSendToken(user, 201, res);
 });
 
 // LOGIN CONTROLLER
@@ -49,8 +74,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Password or email is not correct', 400));
   }
   // sign token
-  const token = signToken(user._id);
-  sendResponseFn(201, token, user, res);
+  createSendToken(user, 200, res);
 });
 
 // PROTECT ROUTE CONTROLLER
@@ -97,7 +121,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const { email } = req.body;
 
   if (!email) {
-    return next(new AppError('Email was not found', 404));
+    return next(new AppError('Enter valid email', 404));
   }
 
   const user = await User.findOne({ email });
@@ -174,6 +198,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetAt = Date.now();
 
   await user.save();
-  const token = signToken(user._id);
-  sendResponseFn(201, token, user, res);
+
+  createSendToken(user, 201, res);
 });
