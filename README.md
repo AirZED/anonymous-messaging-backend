@@ -37,3 +37,10 @@ To run the application in production mode:
 ```
 npm run start:prod
 ```
+
+
+## API Hosted Link
+```
+You can access the hosted API at 
+https://mfoniso-anonymous-messaging-app.onrender.com/api/v1/{dynamic_content} 
+``` 
