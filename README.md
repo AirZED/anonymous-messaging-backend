@@ -14,3 +14,24 @@ Installation
 git clone https://github.com/yourusername/your-repo.git
 cd your-repo
 ```
+
+
+2. Install dependencies:
+
+```
+npm install
+```
+
+
+3. Running the Application
+To run the application in development mode:
+
+```
+npm start
+```
+
+To run the application in production mode:
+
+```
+npm run start:prod
+```
