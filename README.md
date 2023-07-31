@@ -1,15 +1,15 @@
 # Backend Development Project: Anonymous Messaging Platform
 
 
-**Project Description:**
+## Project Description:
 The project's objective is to build a secure and functional backend system where users can send anonymous messages to one another.
 
 
-**Prerequisites:**
+## Prerequisites:
 -  Node.js
 -  MongoDB.
 
-Installation
+## Installation
 1. Clone the repository:
 
 ```
