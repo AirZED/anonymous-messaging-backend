@@ -11,8 +11,10 @@ router
   .route('/')
   // GET ALL MESSAGES
   .get(messageController.fetchSentMessages)
-  .post(messageController.searchMessage);
 
+
+  // SEARCH THROUGH MESSAGES
+  router.post('/search', messageController.searchMessage)
 // ADMIN ACTIVITIES.....................................................
 
 router.post(

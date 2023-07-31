@@ -9,13 +9,15 @@ const hashToken = (id) => {
 };
 
 exports.searchMessage = catchAsync(async (req, res, next) => {
-  console.log('entered');
+  const sender = hashToken(req.user.uniqueId);
   const message = await Message.find({
-    $message: { $search: req.body },
+    $text: { $search: req.body.message },
+    $or: [{ recipient: req.user._id }, { sender }],
   });
 
-  console.log(message)
-
+  if (!message) {
+    return next(new AppError('Message not found', 404));
+  }
   res.status(200).json({
     status: 'success',
     data: {
@@ -133,8 +135,8 @@ exports.editMessage = catchAsync(async (req, res, next) => {
   const sender = hashToken(req.user.uniqueId);
 
   const message = await Message.findOneAndUpdate(
-    { id, sender },
-    req.body.message,
+    { _id: id, sender },
+    { message: req.body.message },
     {
       runValidators: true,
       returnDocument: 'after',
@@ -144,7 +146,7 @@ exports.editMessage = catchAsync(async (req, res, next) => {
   if (!message) {
     return next(new AppError('Message not found'));
   }
-  res.status(204).json({
+  res.status(201).json({
     stutus: 'success',
     data: {
       message,

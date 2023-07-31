@@ -21,14 +21,13 @@ const sendResponseFn = (statusCode, data, res) => {
   });
 };
 
-exports.getAllUsers = async () => {
-  const allUsers = await User.find();
-
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const allUsers = await User.find({});
   if (!allUsers) {
     return next(new AppError('Users not found', 404));
   }
   sendResponseFn(200, allUsers, res);
-};
+});
 
 exports.updateUserDetails = catchAsync(async (req, res, next) => {
   const { id } = req.user;
@@ -49,7 +48,6 @@ exports.updateUserDetails = catchAsync(async (req, res, next) => {
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-
   const user = await User.findByIdAndDelete(id);
   if (!user) {
     return next(new AppError('User not found'));

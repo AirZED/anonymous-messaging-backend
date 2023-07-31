@@ -33,6 +33,9 @@ const messageSchema = new mongoose.Schema(
   },
 );
 
+// creating index to enable search
+messageSchema.index({ message: 'text' });
+
 // DOCUMENT MIDDLEWARE
 messageSchema.pre('save', function (next) {
   if (!this.isNew) {
