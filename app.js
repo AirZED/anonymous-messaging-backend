@@ -3,7 +3,6 @@ const express = require('express');
 const morgan = require('morgan');
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
-const hpp = require('hpp');
 const helmet = require('helmet');
 
 // importing utils
@@ -20,7 +19,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-app.set('trust proxy', false);
+app.set('trust proxy', true);
 // protection against http attacks
 app.use(helmet());
 
@@ -32,8 +31,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-// parses the body
+// protection against ddos attacks
 app.use('/api', limiter);
+// parses the body
 app.use(express.json({ limit: '10kb' }));
 
 // data sanitization against no-sql query attack
