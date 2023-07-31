@@ -1,4 +1,5 @@
-**Backend Development Project: Anonymous Messaging Platform**
+**#Backend Development Project: Anonymous Messaging Platform**
+
 
 Project Description:
 The project's objective is to build a secure and functional backend system where users can send anonymous messages to one another.
@@ -11,7 +12,7 @@ Installation
 1. Clone the repository:
 
 ```
-git clone https://github.com/yourusername/your-repo.git
+git clone https://github.com/AirZED/anonymous-messaging-backend.git
 cd your-repo
 ```
 
