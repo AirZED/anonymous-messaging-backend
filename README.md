@@ -40,7 +40,9 @@ npm run start:prod
 
 
 ## API Hosted Link
-```
-You can access the hosted API at 
-https://mfoniso-anonymous-messaging-app.onrender.com/api/v1/{dynamic_content} 
-``` 
+You can access the hosted API at [Hosted Link](https://mfoniso-anonymous-messaging-app.onrender.com/)
+
+
+## API Documentation Link
+You can access the link to the API [Documentation](https://documenter.getpostman.com/view/22877787/2s9Xxtzbwx)
+
