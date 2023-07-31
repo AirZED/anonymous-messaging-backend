@@ -10,7 +10,8 @@ router.use(authController.protect);
 router
   .route('/')
   // GET ALL MESSAGES
-  .get(messageController.fetchSentMessages);
+  .get(messageController.fetchSentMessages)
+  .post(messageController.searchMessage);
 
 // ADMIN ACTIVITIES.....................................................
 

@@ -8,6 +8,22 @@ const hashToken = (id) => {
   return crypto.createHash('sha256').update(id).digest('hex');
 };
 
+exports.searchMessage = catchAsync(async (req, res, next) => {
+  console.log('entered');
+  const message = await Message.find({
+    $message: { $search: req.body },
+  });
+
+  console.log(message)
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      message,
+    },
+  });
+});
+
 exports.sendMessage = catchAsync(async (req, res, next) => {
   const { id: recipient } = req.params;
   const { uniqueId: sender } = req.user;
